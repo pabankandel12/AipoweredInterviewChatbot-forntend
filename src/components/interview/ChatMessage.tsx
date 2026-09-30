@@ -1,4 +1,7 @@
-import { Sparkles, Bot, User, CheckCircle } from "lucide-react";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Sparkles, Bot, User, Volume2, Square } from "lucide-react";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -14,6 +17,29 @@ export default function ChatMessage({
   isFeedback,
 }: ChatMessageProps) {
   const isUser = role === "user";
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => {
+    return () => window.speechSynthesis?.cancel();
+  }, []);
+
+  const handleListen = () => {
+    if (!("speechSynthesis" in window)) return;
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(content);
+    utterance.lang = navigator.language || "en-US";
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
 
   // Case 1: Render User's Answer Bubble (Right-aligned)
   if (isUser) {
@@ -80,8 +106,18 @@ export default function ChatMessage({
           AI Interviewer
         </span>
         
-        <div className="rounded-3xl rounded-tl-none bg-white border border-slate-200/80 px-5 py-3.5 text-sm font-medium text-slate-800 shadow-sm leading-relaxed">
-          {content}
+        <div className="flex items-start gap-3 rounded-3xl rounded-tl-none bg-white border border-slate-200/80 px-5 py-3.5 text-sm font-medium text-slate-800 shadow-sm leading-relaxed">
+          <p className="flex-1">{content}</p>
+          <button
+            type="button"
+            onClick={handleListen}
+            aria-label={isSpeaking ? "Stop reading question" : "Listen to question"}
+            aria-pressed={isSpeaking}
+            title={isSpeaking ? "Stop reading question" : "Listen to question"}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            {isSpeaking ? <Square size={16} /> : <Volume2 size={18} />}
+          </button>
         </div>
       </div>
     </div>

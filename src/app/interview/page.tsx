@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useInterviewStore from "@/store/interviewStore";
 import { getInterviewDetails } from "@/lib/api";
 import ChatPanel from "@/components/interview/ChatPanel";
 import MessageInput from "@/components/interview/MessageInput";
-import Header from "@/components/layout/Header";
-import { Loader2, Briefcase, Award, ArrowRight } from "lucide-react";
+import { Loader2, Briefcase, Video } from "lucide-react";
 
 export default function InterviewPage() {
   const router = useRouter();
@@ -164,6 +164,13 @@ export default function InterviewPage() {
             >
               Finish Early
             </button>
+            <Link
+              href="/interview/live"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#102a43] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#163b5a]"
+            >
+              <Video size={15} />
+              Live Video
+            </Link>
           </div>
         </div>
 

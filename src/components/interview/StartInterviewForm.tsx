@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useRef } from "react";
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import useInterviewStore from "@/store/interviewStore";
 import { startInterview } from "@/lib/api";
-import { Upload, FileText, AlertCircle, Loader2, Award, FileUp } from "lucide-react";
+import { FileText, AlertCircle, Loader2, Award, FileUp, MessageSquareText, Video } from "lucide-react";
 
 export default function StartInterviewForm() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function StartInterviewForm() {
   const [file, setFile] = useState<File | null>(null);
   const [jdText, setJdText] = useState("");
   const [difficulty, setDifficulty] = useState("medium");
+  const [interviewMode, setInterviewMode] = useState<"text" | "video">("text");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -79,13 +81,15 @@ export default function StartInterviewForm() {
         localStorage.setItem("firstQuestion", data.firstQuestion);
       }
 
-      // Redirect to interview room
-      router.push("/interview");
-    } catch (err: any) {
+      router.push(interviewMode === "video" ? "/interview/live" : "/interview");
+    } catch (err: unknown) {
       console.error(err);
+      const apiMessage = axios.isAxiosError<{ message?: string }>(err)
+        ? err.response?.data?.message
+        : undefined;
       setError(
-        err.response?.data?.message || 
-        "Something went wrong while initializing the AI session. Make sure the AI microservice is running."
+        apiMessage ||
+          "Something went wrong while initializing the AI session. Make sure the AI microservice is running.",
       );
     } finally {
       setLoading(false);
@@ -180,6 +184,42 @@ export default function StartInterviewForm() {
       {/* Difficulty Level & Target */}
       <div className="space-y-2">
         <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+          Interview format
+        </label>
+        <div className="grid grid-cols-2 gap-3" role="group" aria-label="Interview format">
+          <button
+            type="button"
+            onClick={() => setInterviewMode("text")}
+            aria-pressed={interviewMode === "text"}
+            className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-bold transition ${
+              interviewMode === "text"
+                ? "border-blue-700 bg-blue-50 text-blue-800"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            <MessageSquareText size={17} /> Text interview
+          </button>
+          <button
+            type="button"
+            onClick={() => setInterviewMode("video")}
+            aria-pressed={interviewMode === "video"}
+            className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-bold transition ${
+              interviewMode === "video"
+                ? "border-emerald-700 bg-emerald-50 text-emerald-800"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            <Video size={17} /> Live video interview
+          </button>
+        </div>
+        {interviewMode === "video" && (
+          <p className="text-xs text-slate-500">Camera access is requested after the interview starts. Video stays on this device and is not recorded.</p>
+        )}
+      </div>
+
+      {/* Difficulty Level & Target */}
+      <div className="space-y-2">
+        <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">
           Difficulty Level
         </label>
         <div className="grid grid-cols-3 gap-3">
@@ -214,7 +254,7 @@ export default function StartInterviewForm() {
         ) : (
           <span className="flex items-center gap-1.5">
             <Award size={18} />
-            Generate Interview
+            {interviewMode === "video" ? "Generate & Start Live Interview" : "Generate Interview"}
           </span>
         )}
       </button>

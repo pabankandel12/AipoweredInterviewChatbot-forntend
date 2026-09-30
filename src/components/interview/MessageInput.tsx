@@ -1,21 +1,114 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import useInterviewStore from "@/store/interviewStore";
 import { submitAnswer } from "@/lib/api";
-import { Send, Loader2, Sparkles } from "lucide-react";
+import { Send, Loader2, Mic } from "lucide-react";
+
+type BrowserSpeechResult = ArrayLike<{ transcript: string }> & {
+  isFinal: boolean;
+};
+
+type BrowserSpeechRecognitionEvent = {
+  resultIndex: number;
+  results: ArrayLike<BrowserSpeechResult>;
+};
+
+type BrowserSpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: BrowserSpeechRecognitionEvent) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+};
+
+type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
+
+type SpeechRecognitionWindow = Window & {
+  SpeechRecognition?: BrowserSpeechRecognitionConstructor;
+  webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
+};
 
 export default function MessageInput() {
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceError, setVoiceError] = useState("");
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
 
   const sessionId = useInterviewStore((state) => state.sessionId);
   const addMessage = useInterviewStore((state) => state.addMessage);
 
+  useEffect(() => {
+    return () => recognitionRef.current?.abort();
+  }, []);
+
+  const handleToggleVoiceInput = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const speechWindow = window as SpeechRecognitionWindow;
+    const SpeechRecognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setVoiceError("Voice input is not supported in this browser. You can type your answer instead.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = navigator.language || "en-US";
+    recognition.onresult = (event) => {
+      const finalTranscript = Array.from(event.results)
+        .slice(event.resultIndex)
+        .filter((result) => result.isFinal)
+        .map((result) => result[0]?.transcript.trim() ?? "")
+        .filter(Boolean)
+        .join(" ");
+
+      if (finalTranscript) {
+        setMessage((currentMessage) =>
+          [currentMessage.trim(), finalTranscript].filter(Boolean).join(" "),
+        );
+      }
+    };
+    recognition.onerror = (event) => {
+      setIsListening(false);
+      recognitionRef.current = null;
+      setVoiceError(
+        event.error === "not-allowed" || event.error === "service-not-allowed"
+          ? "Microphone access was denied. Allow microphone access or type your answer."
+          : "Could not recognize speech. Try again or type your answer.",
+      );
+    };
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    setVoiceError("");
+    recognitionRef.current = recognition;
+
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch {
+      recognitionRef.current = null;
+      setVoiceError("Could not start voice input. Check microphone access and try again.");
+    }
+  };
+
   const handleSend = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || loading || isListening) return;
 
     if (!sessionId) {
       alert("Session not found. Please start the interview again.");
@@ -68,7 +161,7 @@ export default function MessageInput() {
         }, 800);
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error submitting answer:", error);
       addMessage({
         role: "assistant",
@@ -96,7 +189,7 @@ export default function MessageInput() {
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={2}
-            placeholder="Type your detailed answer here..."
+            placeholder="Type an answer or use the microphone..."
             className="w-full bg-transparent p-4 text-sm text-slate-800 placeholder-slate-400 outline-none resize-none"
             disabled={loading}
           />
@@ -105,10 +198,26 @@ export default function MessageInput() {
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={handleToggleVoiceInput}
+          disabled={loading}
+          aria-label={isListening ? "Stop voice input" : "Dictate answer with microphone"}
+          aria-pressed={isListening}
+          title={isListening ? "Stop voice input" : "Dictate answer with microphone"}
+          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border transition disabled:opacity-55 ${
+            isListening
+              ? "border-red-200 bg-red-50 text-red-700"
+              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+          }`}
+        >
+          <Mic size={20} className={isListening ? "animate-pulse" : ""} />
+        </button>
+
         {/* Send Button */}
         <button
           onClick={handleSend}
-          disabled={loading || !message.trim()}
+          disabled={loading || isListening || !message.trim()}
           className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-indigo-500/10 hover:from-blue-500 hover:to-indigo-500 hover:shadow-indigo-500/20 outline-none transition disabled:opacity-55 disabled:shadow-none"
         >
           {loading ? (
@@ -118,6 +227,11 @@ export default function MessageInput() {
           )}
         </button>
       </div>
+      <p aria-live="polite" className="mx-auto mt-2 max-w-5xl text-xs text-slate-500">
+        {isListening
+          ? "Listening. Stop voice input when you are finished speaking."
+          : voiceError}
+      </p>
     </div>
   );
 }

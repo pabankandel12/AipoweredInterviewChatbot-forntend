@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getHistory } from "@/lib/api";
+import useInterviewStore from "@/store/interviewStore";
 import { 
   Briefcase, Calendar, Award, CheckCircle, Clock, ArrowRight, PlusCircle, 
-  BarChart2, ShieldAlert, Sparkles, Loader2 
+  BarChart2, ShieldAlert, Sparkles, Loader2, Video
 } from "lucide-react";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const setSession = useInterviewStore((state) => state.setSession);
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -257,7 +259,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="mt-6 flex items-center justify-between gap-4">
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <span className="flex items-center gap-1 text-xs text-slate-400">
                       <Calendar size={12} />
                       {new Date(session.createdAt).toLocaleDateString(undefined, {
@@ -276,16 +278,27 @@ export default function DashboardPage() {
                         <ArrowRight size={14} />
                       </Link>
                     ) : (
-                      <button
-                        onClick={() => {
-                          localStorage.setItem("sessionId", session._id);
-                          router.push("/interview");
-                        }}
-                        className="inline-flex items-center gap-1 text-sm font-bold text-amber-600 hover:text-amber-500 transition"
-                      >
-                        Resume Prep
-                        <ArrowRight size={14} />
-                      </button>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          onClick={() => {
+                            setSession(session._id);
+                            router.push("/interview");
+                          }}
+                          className="inline-flex items-center gap-1 text-sm font-bold text-amber-600 hover:text-amber-500 transition"
+                        >
+                          Resume Prep
+                          <ArrowRight size={14} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSession(session._id);
+                            router.push("/interview/live");
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-600"
+                        >
+                          <Video size={15} /> Start Live Interview
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
