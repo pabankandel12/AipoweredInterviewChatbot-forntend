@@ -1,34 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, X, LogOut, User, LayoutDashboard, Briefcase } from "lucide-react";
+import { ArrowUpRight, BriefcaseBusiness, LogOut, Menu, X } from "lucide-react";
+
+type CurrentUser = { name: string; email: string };
 
 export default function Header() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   const checkAuth = () => {
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        try {
-          setCurrentUser(JSON.parse(storedUser));
-        } catch (e) {
-          setCurrentUser(null);
-        }
-      } else {
-        setCurrentUser(null);
-      }
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) return setCurrentUser(null);
+    try {
+      setCurrentUser(JSON.parse(storedUser) as CurrentUser);
+    } catch {
+      setCurrentUser(null);
     }
   };
 
   useEffect(() => {
     checkAuth();
     window.addEventListener("auth-change", checkAuth);
-    window.addEventListener("storage", checkAuth); // handle changes across tabs
+    window.addEventListener("storage", checkAuth);
     return () => {
       window.removeEventListener("auth-change", checkAuth);
       window.removeEventListener("storage", checkAuth);
@@ -36,161 +33,69 @@ export default function Header() {
   }, []);
 
   const handleLogout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("sessionId");
-      window.dispatchEvent(new Event("auth-change"));
-    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("sessionId");
+    window.dispatchEvent(new Event("auth-change"));
     setOpen(false);
     router.push("/");
     router.refresh();
   };
 
   const navLinks = currentUser
-    ? [
-        { name: "Home", href: "/" },
-        { name: "Dashboard", href: "/dashboard" },
-      ]
+    ? [{ name: "Home", href: "/" }, { name: "Dashboard", href: "/dashboard" }]
     : [
-        { name: "Home", href: "/" },
-        { name: "Features", href: "/#features" },
-        { name: "Categories", href: "/#categories" },
-        { name: "How It Works", href: "/#how" },
+        { name: "How it works", href: "/#how" },
+        { name: "Practice areas", href: "/#categories" },
+        { name: "What you get", href: "/#features" },
       ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/85 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        
-        {/* Logo */}
-        <Link href="/" className="text-2xl font-bold tracking-tight text-slate-900 transition hover:opacity-90">
-          AI<span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Interview</span>
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-6">
+        <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#102a43] text-sm font-black text-teal-300">AI</span>
+          <span className="text-lg font-bold tracking-tight text-[#102a43]">Interview<span className="text-teal-600">.</span></span>
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-7 md:flex" aria-label="Primary navigation">
           {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className="text-sm font-medium text-slate-600 transition hover:text-blue-600"
-            >
+            <Link key={link.name} href={link.href} className="text-sm font-semibold text-slate-600 transition hover:text-teal-700">
               {link.name}
             </Link>
           ))}
         </nav>
 
-        {/* Auth CTA / User Profile */}
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-3 md:flex">
           {currentUser ? (
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-100 rounded-full px-3 py-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Hi, {currentUser.name.split(" ")[0]}
-              </span>
-              
-              <Link
-                href="/start"
-                className="flex items-center gap-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/20 transition hover:scale-102"
-              >
-                <Briefcase size={16} />
-                Practice Now
-              </Link>
-
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
-                title="Log Out"
-              >
-                <LogOut size={16} />
-                Logout
-              </button>
-            </div>
+            <>
+              <span className="max-w-36 truncate text-sm font-semibold text-slate-600">Hi, {currentUser.name.split(" ")[0]}</span>
+              <Link href="/start" className="inline-flex items-center gap-2 rounded-xl bg-[#102a43] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#163b5a]"><BriefcaseBusiness size={16} /> Practice</Link>
+              <button onClick={handleLogout} className="rounded-xl p-2.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900" title="Log out" aria-label="Log out"><LogOut size={18} /></button>
+            </>
           ) : (
             <>
-              <Link
-                href="/login"
-                className="text-sm font-semibold text-slate-700 hover:text-blue-600 transition"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/20 transition hover:scale-102"
-              >
-                Get Started
-              </Link>
+              <Link href="/login" className="px-3 py-2 text-sm font-bold text-slate-700 transition hover:text-teal-700">Sign in</Link>
+              <Link href="/register" className="inline-flex items-center gap-1 rounded-xl bg-[#102a43] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#163b5a]">Create account <ArrowUpRight size={16} /></Link>
             </>
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setOpen(!open)}
-          className="rounded-lg p-1 text-slate-700 hover:bg-slate-50 md:hidden"
-        >
-          {open ? <X size={24} /> : <Menu size={24} />}
+        <button onClick={() => setOpen((value) => !value)} className="rounded-lg p-2 text-[#102a43] transition hover:bg-slate-100 md:hidden" aria-label="Toggle navigation">
+          {open ? <X size={23} /> : <Menu size={23} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {open && (
-        <div className="border-t border-slate-100 bg-white px-6 py-5 md:hidden animate-fade-in">
-          <div className="flex flex-col gap-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="text-base font-medium text-slate-700 hover:text-blue-600 transition"
-              >
-                {link.name}
-              </Link>
-            ))}
-
-            <hr className="border-slate-100 my-1" />
-
+        <div className="border-t border-slate-200 bg-white px-6 py-5 md:hidden">
+          <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
+            {navLinks.map((link) => <Link key={link.name} href={link.href} onClick={() => setOpen(false)} className="rounded-lg px-3 py-3 text-sm font-bold text-slate-700 hover:bg-teal-50 hover:text-teal-800">{link.name}</Link>)}
+          </nav>
+          <div className="mt-4 border-t border-slate-200 pt-4">
             {currentUser ? (
-              <div className="flex flex-col gap-3">
-                <span className="text-sm font-medium text-slate-500 px-1">
-                  Logged in as {currentUser.email}
-                </span>
-                
-                <Link
-                  href="/start"
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white"
-                  onClick={() => setOpen(false)}
-                >
-                  <Briefcase size={18} />
-                  Practice Now
-                </Link>
-
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-600"
-                >
-                  <LogOut size={18} />
-                  Log Out
-                </button>
-              </div>
+              <div className="space-y-3"><p className="px-3 text-sm text-slate-500">Signed in as {currentUser.email}</p><Link href="/start" onClick={() => setOpen(false)} className="flex items-center justify-center gap-2 rounded-xl bg-[#102a43] py-3 text-sm font-bold text-white"><BriefcaseBusiness size={17} /> Start practice</Link><button onClick={handleLogout} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700"><LogOut size={17} /> Log out</button></div>
             ) : (
-              <div className="flex flex-col gap-3">
-                <Link
-                  href="/login"
-                  className="flex items-center justify-center rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-700"
-                  onClick={() => setOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/register"
-                  className="flex items-center justify-center rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white"
-                  onClick={() => setOpen(false)}
-                >
-                  Get Started
-                </Link>
-              </div>
+              <div className="grid grid-cols-2 gap-3"><Link href="/login" onClick={() => setOpen(false)} className="rounded-xl border border-slate-200 py-3 text-center text-sm font-bold text-slate-700">Sign in</Link><Link href="/register" onClick={() => setOpen(false)} className="rounded-xl bg-[#102a43] py-3 text-center text-sm font-bold text-white">Create account</Link></div>
             )}
           </div>
         </div>

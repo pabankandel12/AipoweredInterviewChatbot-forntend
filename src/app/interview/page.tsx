@@ -181,6 +181,9 @@ export default function InterviewPage() {
         <ChatPanel />
       </div>
 
+      {/* <ArrowRight className=
+      "absolute right-0 "></ArrowRight> */}
+
       {/* Answer Message Input Box */}
       <div className="bg-white border-t border-slate-100 relative z-10 shadow-lg">
         <div className="mx-auto max-w-5xl">

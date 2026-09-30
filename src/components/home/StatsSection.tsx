@@ -1,42 +1,20 @@
+const steps = [
+  ["01", "Upload your CV"],
+  ["02", "Add a target role"],
+  ["03", "Practice your answers"],
+  ["04", "Learn from feedback"],
+];
+
 export default function StatsSection() {
-  const stats = [
-    {
-      number: "10K+",
-      label: "Mock Interviews",
-    },
-    {
-      number: "5K+",
-      label: "Students",
-    },
-    {
-      number: "95%",
-      label: "Success Rate",
-    },
-    {
-      number: "24/7",
-      label: "AI Availability",
-    },
-  ];
-
   return (
-    <section className="bg-slate-50 py-16">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-          {stats.map((item) => (
-            <div
-              key={item.label}
-              className="text-center"
-            >
-              <h3 className="text-4xl font-bold">
-                {item.number}
-              </h3>
-
-              <p className="mt-2 text-gray-500">
-                {item.label}
-              </p>
-            </div>
-          ))}
-        </div>
+    <section className="border-y border-slate-200 bg-white py-8">
+      <div className="mx-auto grid max-w-7xl gap-5 px-6 sm:grid-cols-2 lg:grid-cols-4">
+        {steps.map(([number, label]) => (
+          <div key={number} className="flex items-center gap-4 border-l border-slate-200 pl-5 first:border-l-0 first:pl-0">
+            <span className="text-2xl font-bold text-teal-600">{number}</span>
+            <span className="text-sm font-semibold text-slate-600">{label}</span>
+          </div>
+        ))}
       </div>
     </section>
   );
