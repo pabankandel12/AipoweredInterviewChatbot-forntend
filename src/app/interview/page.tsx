@@ -6,7 +6,6 @@ import useInterviewStore from "@/store/interviewStore";
 import { getInterviewDetails } from "@/lib/api";
 import ChatPanel from "@/components/interview/ChatPanel";
 import MessageInput from "@/components/interview/MessageInput";
-import VideoPanel from "@/components/interview/VideoPanel";
 import { Loader2, Briefcase, Camera, RotateCcw } from "lucide-react";
 
 export default function InterviewPage() {
@@ -19,7 +18,6 @@ export default function InterviewPage() {
   const [loading, setLoading] = useState(true);
   const [interview, setInterview] = useState<any>(null);
   const [error, setError] = useState("");
-  const [showCamera, setShowCamera] = useState(false);
 
   useEffect(() => {
     const loadInterview = async () => {
@@ -167,10 +165,10 @@ export default function InterviewPage() {
             </div>
 
             <button
-              onClick={() => setShowCamera((visible) => !visible)}
-              className={`hidden items-center gap-1 rounded-xl border px-3 py-2 text-xs font-bold transition sm:inline-flex ${showCamera ? "border-teal-200 bg-teal-50 text-teal-800" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+              onClick={() => router.push("/interview/live")}
+              className="hidden items-center gap-1 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-bold text-teal-800 transition hover:bg-teal-100 sm:inline-flex"
             >
-              <Camera size={15} /> Camera
+              <Camera size={15} /> Camera mode
             </button>
             <button
               onClick={handleStartOver}
@@ -210,7 +208,6 @@ export default function InterviewPage() {
           <MessageInput />
         </div>
       </div>
-      {showCamera && <VideoPanel onClose={() => setShowCamera(false)} />}
     </div>
   );
 }

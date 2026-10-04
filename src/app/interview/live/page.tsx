@@ -132,7 +132,7 @@ export default function LiveInterviewPage() {
   const currentQuestionNumber = Math.min(interview.currentIndex + 1, totalQuestions);
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-slate-50">
+    <main className="flex min-h-[calc(100dvh-72px)] flex-col bg-slate-50 lg:h-[calc(100dvh-72px)] lg:min-h-0 lg:overflow-hidden">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div className="min-w-0">
@@ -172,8 +172,8 @@ export default function LiveInterviewPage() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl items-start gap-4 p-4 sm:p-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
-        <section className="rounded-lg border border-slate-200 bg-white p-4" aria-labelledby="camera-title">
+      <div className="mx-auto grid w-full max-w-7xl flex-1 items-stretch gap-4 p-4 sm:p-6 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(380px,1fr)] lg:overflow-hidden">
+        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:min-h-0 lg:overflow-y-auto" aria-labelledby="camera-title">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h2 id="camera-title" className="text-sm font-bold text-slate-900">Camera preview</h2>
@@ -283,12 +283,18 @@ export default function LiveInterviewPage() {
           )}
         </section>
 
-        <section className="flex min-h-136 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white" aria-label="Interview conversation">
-          <div className="border-b border-slate-200 px-4 py-3">
-            <h2 className="text-sm font-bold text-slate-900">Interview conversation</h2>
-            <p className="mt-1 text-xs text-slate-500">Listen to each question or dictate your answer with the microphone.</p>
+        <section className="flex h-[min(68dvh,680px)] min-h-[25rem] min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:h-full lg:min-h-0" aria-label="Interview conversation">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Interview conversation</h2>
+              <p className="mt-1 text-xs text-slate-500">Your answers and interview questions appear here.</p>
+            </div>
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Live
+            </span>
           </div>
-          <div className="min-h-92 flex-1 overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-hidden">
             <ChatPanel />
           </div>
           <MessageInput />

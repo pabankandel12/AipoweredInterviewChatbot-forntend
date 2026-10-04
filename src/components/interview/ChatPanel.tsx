@@ -6,17 +6,24 @@ import ChatMessage from "./ChatMessage";
 
 export default function ChatPanel() {
   const messages = useInterviewStore((state) => state.messages);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scrolls to the bottom of the chat pane whenever a new message is appended
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const chatPane = chatScrollRef.current;
+    if (chatPane) {
+      chatPane.scrollTo({ top: chatPane.scrollHeight, behavior: "smooth" });
+    }
   }, [messages]);
 
   return (
-    <div className="h-full min-h-0 overflow-y-auto overscroll-contain bg-slate-50/40 px-4 py-6 md:px-6">
-      <div className="mx-auto max-w-5xl space-y-6">
-        
+    <div
+      ref={chatScrollRef}
+      role="log"
+      aria-label="Interview conversation messages"
+      aria-live="polite"
+      className="h-full min-h-0 overflow-y-auto overscroll-contain bg-slate-50/70 px-4 py-5 [scrollbar-gutter:stable] md:px-6"
+    >
+      <div className="mx-auto max-w-3xl space-y-5 pb-2">
         {messages.map((message, index) => (
           <ChatMessage
             key={index}
@@ -26,9 +33,6 @@ export default function ChatPanel() {
             isFeedback={message.isFeedback}
           />
         ))}
-        
-        {/* Anchor point for scrolling */}
-        <div ref={chatEndRef} />
       </div>
     </div>
   );

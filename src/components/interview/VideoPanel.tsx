@@ -61,7 +61,10 @@ export default function VideoPanel({ onClose }: { onClose: () => void }) {
         const vision = await import("@mediapipe/tasks-vision");
         const fileset = await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm");
         detector = await vision.FaceDetector.createFromOptions(fileset, {
-          baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite" },
+          baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite",
+            delegate: "CPU",
+          },
           runningMode: "VIDEO",
           minDetectionConfidence: 0.55,
         });

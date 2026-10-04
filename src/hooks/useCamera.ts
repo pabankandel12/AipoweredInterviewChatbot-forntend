@@ -253,7 +253,9 @@ export default function useCamera() {
 				if (disposed) return;
 
 				const detector = await vision.FaceDetector.createFromOptions(visionFiles, {
-					baseOptions: { modelAssetPath: faceModelUrl },
+					// CPU is deliberate here. Face checks do not need GPU acceleration,
+					// and it avoids WebGL/OpenGL warnings on some browsers.
+					baseOptions: { modelAssetPath: faceModelUrl, delegate: "CPU" },
 					runningMode: "VIDEO",
 					minDetectionConfidence: 0.5,
 				});
