@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Camera, CameraOff, Loader2, ShieldCheck, Video } from "lucide-react";
+import { Activity, AlertTriangle, ArrowLeft, Camera, CameraOff, Loader2, ShieldCheck, Video } from "lucide-react";
 import ChatPanel from "@/components/interview/ChatPanel";
 import MessageInput from "@/components/interview/MessageInput";
 import useCamera from "@/hooks/useCamera";
@@ -39,7 +39,20 @@ export default function LiveInterviewPage() {
   const [interview, setInterview] = useState<InterviewDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
-  const { videoRef, isCameraActive, isStarting, cameraError, toggleCamera } = useCamera();
+  const {
+    videoRef,
+    isCameraActive,
+    isStarting,
+    cameraError,
+    motionDetected,
+    motionError,
+    qualityError,
+    frameQuality,
+    isPageVisible,
+    faceStatus,
+    faceError,
+    toggleCamera,
+  } = useCamera();
 
   useEffect(() => {
     const loadInterview = async () => {
@@ -164,7 +177,7 @@ export default function LiveInterviewPage() {
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h2 id="camera-title" className="text-sm font-bold text-slate-900">Camera preview</h2>
-              <p className="mt-1 text-xs text-slate-500">Your video stays on this device and is not recorded.</p>
+              <p className="mt-1 text-xs text-slate-500">Face and motion checks run on this device. Video is not recorded.</p>
             </div>
             <span className={`flex items-center gap-1.5 text-xs font-semibold ${isCameraActive ? "text-emerald-700" : "text-slate-500"}`}>
               <span className={`h-2 w-2 rounded-full ${isCameraActive ? "bg-emerald-500" : "bg-slate-300"}`} />
@@ -187,7 +200,57 @@ export default function LiveInterviewPage() {
                 <p className="text-sm">Turn on your camera when you are ready.</p>
               </div>
             )}
+            {isCameraActive && (
+              <div
+                role="status"
+                aria-live="polite"
+                className={`absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                  faceStatus === "out-of-frame" || motionDetected || frameQuality === "unclear" || !isPageVisible
+                    ? "bg-amber-400 text-amber-950"
+                    : faceStatus === "error"
+                      ? "bg-red-600 text-white"
+                      : "bg-slate-900/75 text-white"
+                }`}
+              >
+                {faceStatus === "out-of-frame" || faceStatus === "error" || frameQuality === "unclear" || !isPageVisible ? (
+                  <AlertTriangle size={14} />
+                ) : (
+                  <Activity size={14} />
+                )}
+                {faceStatus === "loading"
+                  ? "Starting face check..."
+                  : faceStatus === "out-of-frame"
+                    ? "Please stay in frame"
+                    : faceStatus === "error"
+                      ? "Face check unavailable"
+                        : !isPageVisible
+                          ? "Interview tab is inactive"
+                        : frameQuality === "unclear"
+                          ? "Camera image needs improvement"
+                        : motionDetected
+                        ? "Movement detected"
+                        : faceStatus === "in-frame"
+                          ? "Face in frame · watching for movement"
+                          : "Watching for movement"}
+              </div>
+            )}
           </div>
+
+          {isCameraActive && faceStatus === "out-of-frame" && (
+            <p role="alert" className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
+              Your face is missing, too close to an edge, or more than one person is visible. Centre yourself in the camera frame and continue alone.
+            </p>
+          )}
+          {isCameraActive && frameQuality === "unclear" && (
+            <p role="alert" className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
+              The camera image looks unclear or poorly lit. Improve the lighting, clean the lens, and make sure your face and background are easy to see.
+            </p>
+          )}
+          {isCameraActive && !isPageVisible && (
+            <p role="alert" className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
+              The interview page is not active. Return to this tab and keep it open while you answer.
+            </p>
+          )}
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
@@ -208,6 +271,15 @@ export default function LiveInterviewPage() {
 
           {cameraError && (
             <p role="alert" className="mt-3 text-sm text-red-700">{cameraError}</p>
+          )}
+          {motionError && (
+            <p role="alert" className="mt-3 text-sm text-red-700">{motionError}</p>
+          )}
+          {qualityError && (
+            <p role="alert" className="mt-3 text-sm text-red-700">{qualityError}</p>
+          )}
+          {faceError && (
+            <p role="alert" className="mt-3 text-sm text-red-700">{faceError}</p>
           )}
         </section>
 

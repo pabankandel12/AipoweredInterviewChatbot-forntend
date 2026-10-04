@@ -14,7 +14,7 @@ export default function ChatPanel() {
   }, [messages]);
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-50/40 px-4 py-6 md:px-6">
+    <div className="h-full min-h-0 overflow-y-auto overscroll-contain bg-slate-50/40 px-4 py-6 md:px-6">
       <div className="mx-auto max-w-5xl space-y-6">
         
         {messages.map((message, index) => (

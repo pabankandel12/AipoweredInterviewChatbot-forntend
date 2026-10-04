@@ -89,7 +89,7 @@ export default function StartInterviewForm() {
         : undefined;
       setError(
         apiMessage ||
-          "Something went wrong while initializing the AI session. Make sure the AI microservice is running.",
+        "The AI service may be waking from its free-plan idle period. Please try again; if it keeps failing, check the Render service logs and environment variables.",
       );
     } finally {
       setLoading(false);
@@ -258,6 +258,11 @@ export default function StartInterviewForm() {
           </span>
         )}
       </button>
+      {loading && (
+        <p role="status" className="text-center text-xs leading-5 text-slate-500">
+          On Render&apos;s free plan, the AI service may take up to a minute to wake after inactivity. Keep this page open while it starts.
+        </p>
+      )}
     </form>
   );
 }

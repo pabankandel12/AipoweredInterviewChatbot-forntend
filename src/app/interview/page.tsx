@@ -1,23 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useInterviewStore from "@/store/interviewStore";
 import { getInterviewDetails } from "@/lib/api";
 import ChatPanel from "@/components/interview/ChatPanel";
 import MessageInput from "@/components/interview/MessageInput";
-import { Loader2, Briefcase, Video } from "lucide-react";
+import VideoPanel from "@/components/interview/VideoPanel";
+import { Loader2, Briefcase, Camera, RotateCcw } from "lucide-react";
 
 export default function InterviewPage() {
   const router = useRouter();
   
   const sessionId = useInterviewStore((state) => state.sessionId);
   const setMessages = useInterviewStore((state) => state.setMessages);
+  const resetInterview = useInterviewStore((state) => state.reset);
   
   const [loading, setLoading] = useState(true);
   const [interview, setInterview] = useState<any>(null);
   const [error, setError] = useState("");
+  const [showCamera, setShowCamera] = useState(false);
 
   useEffect(() => {
     const loadInterview = async () => {
@@ -96,6 +98,13 @@ export default function InterviewPage() {
     router.push(`/result?id=${activeSessionId}`);
   };
 
+  const handleStartOver = () => {
+    if (window.confirm("Start a new practice session? Your current session will remain in your history.")) {
+      resetInterview();
+      router.push("/start");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-[85vh] flex-col items-center justify-center gap-3 bg-slate-50">
@@ -130,7 +139,7 @@ export default function InterviewPage() {
   const progressPercent = interview ? (interview.currentIndex / totalQuestions) * 100 : 0;
 
   return (
-    <div className="flex h-[88vh] flex-col bg-slate-50">
+    <div className="relative flex h-[calc(100vh-72px)] min-h-0 flex-col bg-slate-50">
       {/* Top Session Progress Header */}
       <div className="border-b bg-white px-6 py-4 shadow-sm relative z-10">
         <div className="mx-auto max-w-5xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -148,7 +157,7 @@ export default function InterviewPage() {
             </h2>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Progress Counter */}
             <div className="text-right space-y-0.5">
               <span className="text-xs font-bold text-slate-400 block">PROGRESS</span>
@@ -157,20 +166,24 @@ export default function InterviewPage() {
               </span>
             </div>
 
-            {/* Quick Exit */}
+            <button
+              onClick={() => setShowCamera((visible) => !visible)}
+              className={`hidden items-center gap-1 rounded-xl border px-3 py-2 text-xs font-bold transition sm:inline-flex ${showCamera ? "border-teal-200 bg-teal-50 text-teal-800" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+            >
+              <Camera size={15} /> Camera
+            </button>
+            <button
+              onClick={handleStartOver}
+              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50"
+            >
+              <RotateCcw size={14} /> Start over
+            </button>
             <button
               onClick={handleFinishEarly}
               className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition"
             >
               Finish Early
             </button>
-            <Link
-              href="/interview/live"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#102a43] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#163b5a]"
-            >
-              <Video size={15} />
-              Live Video
-            </Link>
           </div>
         </div>
 
@@ -184,7 +197,7 @@ export default function InterviewPage() {
       </div>
 
       {/* Message Chat Pane */}
-      <div className="flex-1 overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-hidden">
         <ChatPanel />
       </div>
 
@@ -197,6 +210,7 @@ export default function InterviewPage() {
           <MessageInput />
         </div>
       </div>
+      {showCamera && <VideoPanel onClose={() => setShowCamera(false)} />}
     </div>
   );
 }
